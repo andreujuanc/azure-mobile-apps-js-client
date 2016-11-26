@@ -47,6 +47,7 @@
     "e2esetup": "grunt e2esetup"
   },
   "dependencies": {
+    "ydn-db": "git://github.com/yathit/ydn-db.git#master" ,
     "azure-odata-sql": "^0.2.0",
     "azure-query-js": "^0.1.0",
     "node-uuid": "^1.4.7",
