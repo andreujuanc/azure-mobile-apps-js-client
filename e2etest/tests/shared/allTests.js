@@ -2,16 +2,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-/// <reference path="../testFramework.js" />
-/// <reference path="roundTripTests.js" />
-/// <reference path="queryTests.js" />
-/// <reference path="updateDeleteTests.js" />
-/// <reference path="loginTests.js" />
-/// <reference path="miscTests.js" />
-/// <reference path="pushTests.js" />
-/// <reference path="apiTests.js" />
-/// <reference path="../../../ZumoE2ETestAppJs/ZumoE2ETestAppJs/js/MobileServices.js" />
-
 (function () {
     var setupGroup = new zumo.Group('Tests setup', [
         new zumo.Test('Identify enabled runtime features',
@@ -45,8 +35,10 @@
     zumo.testGroups.push(new zumo.Group(zumo.tests.updateDelete.name, zumo.tests.updateDelete.tests));
     zumo.testGroups.push(new zumo.Group(zumo.tests.login.name, zumo.tests.login.tests));
     zumo.testGroups.push(new zumo.Group(zumo.tests.misc.name, zumo.tests.misc.tests));
-    // Fix Push tests: https://github.com/Azure/azure-mobile-apps-js-client/issues/63
-    // zumo.testGroups.push(new zumo.Group(zumo.tests.push.name, zumo.tests.push.tests));
+    // Add push tests only if they are defined.
+    if (zumo.tests.push) {
+        zumo.testGroups.push(new zumo.Group(zumo.tests.push.name, zumo.tests.push.tests));
+    }
     zumo.testGroups.push(new zumo.Group(zumo.tests.api.name, zumo.tests.api.tests));
 
     var allTests = [];

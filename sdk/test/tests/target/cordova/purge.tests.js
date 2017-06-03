@@ -69,6 +69,33 @@ $testGroup('purge tests')
         return testHelper.runActions(actions);
     }),
 
+    $test('Vanilla purge - purge query matching entire table where table has too many records')
+    .checkAsync(function () {
+        var records = [],
+            tableQuery = new Query(tableName),
+            purgeQuery = tableQuery;
+
+        for (var i = 0; i < 3000; i++) {
+            records.push({id: 'id'+i, text: 'sometext'});
+        }
+
+        var actions = [
+            // Add record and incremental state
+            [store, store.upsert, tableName, records],
+            addIncrementalSyncState,
+            // Perform purge
+            [purgeManager, purgeManager.purge, purgeQuery],
+            // Verify purge
+            verifyIncrementalSyncStateIsRemoved,
+            [store, store.read, tableQuery],
+            function(result) {
+                $assert.areEqual(result, []);
+            }
+        ];
+
+        return testHelper.runActions(actions);
+    }),
+
     $test('Vanilla purge - purge query not matching all records')
     .checkAsync(function () {
         var record1 = {id: '1', text: 'a'},

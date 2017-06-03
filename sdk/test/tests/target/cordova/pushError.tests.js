@@ -18,6 +18,11 @@ var Platform = require('../../../../src/Platform'),
 var operationTableName = tableConstants.operationTableName,
     store,
     testVersion = 'someversion',
+    testError = {
+        request: {
+            status: 400
+        }
+    },
     testId = 'someid';
     
 $testGroup('pushError tests')
@@ -105,7 +110,7 @@ $testGroup('pushError tests')
                     id: testId
                 }
             },
-            pushError = createPushError(store, operationTableManager, runner(), pushOperation, 'some-error');
+            pushError = createPushError(store, operationTableManager, runner(), pushOperation, testError);
 
         var batchExecuted;
         store.executeBatch = function(batch) {
@@ -207,7 +212,7 @@ function verifyChangeAction(oldAction, newAction, oldItemId, newItemId, oldVersi
                 // version not set intentionally. we want to make sure the test succeeds by using the version value in the new record.
             }
         },
-        pushError = createPushError(store, operationTableManager, runner(), pushOperation, 'some-error');
+        pushError = createPushError(store, operationTableManager, runner(), pushOperation, testError);
 
     var batchExecuted;
     store.executeBatch = function(batch) {

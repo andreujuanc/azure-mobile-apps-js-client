@@ -33,9 +33,6 @@ var api = { // Modules that need to be exposed outside the SDK for all targets
      * @type {MobileServiceClient} 
      */
     MobileServiceClient: require('./MobileServiceClient'),
-    MobileServiceLogin: require('./MobileServiceLogin'),
-    MobileServiceSyncTable: require('./sync/MobileServiceSyncTable'),
-    MobileServiceTable: require('./MobileServiceTable'),
 
     /** 
      * @type {QueryJs}

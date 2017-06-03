@@ -9,7 +9,7 @@ var Validate = require('../Utilities/Validate'),
     createPullManager = require('./pull').createPullManager,
     createPushManager = require('./push').createPushManager,
     createPurgeManager = require('./purge').createPurgeManager,
-    uuid = require('node-uuid'),
+    uuid = require('uuid'),
     _ = require('../Utilities/Extensions');
 
 

@@ -1,7 +1,7 @@
 {
   "name": "azure-mobile-apps-client",
-  "description": "Javascript client for Azure Mobile Apps. For more details visit http://azure.microsoft.com/en-us/develop/mobile",
-  "version": "2.0.0-rc1",
+  "description": "Javascript SDK for connecting to Azure Mobile Apps. For more details visit https://azure.microsoft.com/en-us/documentation/learning-paths/appservice-mobileapps/",
+  "version": "2.0.1",
   "devDependencies": {
     "browserify": "~11.1.0",
     "browserify-derequire": "~0.9.4",
@@ -26,6 +26,8 @@
     "rimraf": "^2.5.2",
     "wd": "^0.4.0"
   },
+  "author": "Microsoft",
+  "homepage": "https://azure.microsoft.com/en-us/documentation/learning-paths/appservice-mobileapps/",
   "license": "Apache-2.0",
   "main": "sdk/src/index.js",
   "repository": {
@@ -49,7 +51,17 @@
   "dependencies": {
     "azure-odata-sql": "^0.2.0",
     "azure-query-js": "^0.1.0",
-    "node-uuid": "^1.4.7",
+    "uuid": "^3.0.1",
     "verror": "^1.8.1"
-  }
+  },
+  "keywords": [
+    "microsoft",
+    "azure",
+    "mobile",
+    "windowsazureofficial",
+    "app",
+    "service",
+    "api",
+    "apps"
+  ]
 }

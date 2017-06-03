@@ -17,7 +17,7 @@ var Platform = require('../../../../src/Platform'),
     MobileServiceClient = require('../../../../src/MobileServiceClient'),
     MobileServiceSqliteStore = require('../../../../src/Platform/cordova/MobileServiceSqliteStore'),
     serverUrl = require('./config').server,
-    uuid = require('node-uuid'),
+    uuid = require('uuid'),
     storeTestHelper = require('./storeTestHelper');
     
 var testTableName = storeTestHelper.testTableName,

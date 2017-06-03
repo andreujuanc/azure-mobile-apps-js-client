@@ -388,45 +388,68 @@ $testGroup('Extensions.js',
         }
     }),
 
-    $test('createError')
-    .description('Verify the creation of error messages')
+    $test('createError-empty')
+    .description('Verify the creation of error messages - empty')
     .check(function () {
         // Default
         var error = Extensions.createError();
         $assert.areEqual(error.message, 'Unexpected failure.');
         $assert.isNull(error.request);
         $assert.isNull(error.exception);
+    }),
 
-        // String
+    $test('createError-string')
+    .description('Verify the creation of error messages - string')
+    .check(function () {
         error = Extensions.createError('BOOM');
         $assert.areEqual(error.message, 'BOOM');
         $assert.isNull(error.request);
         $assert.isNull(error.exception);
+    }),
 
+    $test('createError-object')
+    .description('Verify the creation of error messages - object')
+    .check(function () {
         // Object
         error = Extensions.createError({ x: 123 });
         $assert.areEqual(error.message, 'Unexpected failure.');
         $assert.isNull(error.request);
         $assert.areEqual(error.exception.x, 123);
+    }),
 
+    $test('createError-errbody')
+    .description('Verify the creation of error messages - error in body')
+    .check(function () {
         // Failing request (error in body)
         error = Extensions.createError(null, { status: 400, responseText: '{"error":"BOOM"}'});
         $assert.areEqual(error.message, 'BOOM');
         $assert.areEqual(error.request.status, 400);
         $assert.isNull(error.exception);
+    }),
 
+    $test('createError-descbody')
+    .description('Verify the creation of error messages - description in body')
+    .check(function () {
         // Failing request (description in body)
         error = Extensions.createError(null, { status: 400, responseText: '{"description":"BOOM"}' });
         $assert.areEqual(error.message, 'BOOM');
         $assert.areEqual(error.request.status, 400);
         $assert.isNull(error.exception);
+    }),
 
+    $test('createError-statustext')
+    .description('Verify the creation of error messages - status text')
+    .check(function () {
         // Failing request (statusText)
         error = Extensions.createError(null, { status: 400, responseText: '{"other":"BOOM"}', statusText: 'EXPLODED' });
         $assert.areEqual(error.message, 'EXPLODED');
         $assert.areEqual(error.request.status, 400);
         $assert.isNull(error.exception);
+    }),
 
+    $test('createError-failingconn')
+    .description('Verify the creation of error messages - failing connection')
+    .check(function () {
         // Failing connection
         error = Extensions.createError(null, { status: 0, responseText: '{"description":"BOOM"}' });
         $assert.areEqual(error.message, 'Unexpected connection failure.');

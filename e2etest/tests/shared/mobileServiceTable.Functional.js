@@ -2,16 +2,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-/// <reference path="../../../ZumoE2ETestAppJs/ZumoE2ETestAppHTML/js/platformSpecificFunctions.js" />
-/// <reference path="../../../ZumoE2ETestAppJs/ZumoE2ETestAppJs/js/MobileServices.js" />
-/// <reference path="../testFramework.js" />
-
 function defineTableGenericFunctionalTestsNamespace() {
-    var tests = [];
-    var stringIdTableName = 'roundtriptable';
-    var intIdTableName = 'intidroundtriptable';
-    var globalTest = null;
-    var globaldone = null;
+    var tests = [],
+        stringIdTableName = 'roundtriptable',
+        intIdTableName = 'intidroundtriptable',
+        globalTest = null,
+        globaldone = null;
+
     //Helper functions
     function newLink() {
         var def = $.Deferred();
@@ -22,20 +19,6 @@ function defineTableGenericFunctionalTestsNamespace() {
             globalTest.addLog('Error' + JSON.stringify(err));
         }
         globaldone(false);
-    }
-
-    function getTestSystemProperties() {
-        return [
-            WindowsAzure.MobileServiceTable.SystemProperties.None,
-            WindowsAzure.MobileServiceTable.SystemProperties.All,
-            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
-            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt,
-            WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-            WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
-            WindowsAzure.MobileServiceTable.SystemProperties.Version
-        ];
     }
 
     function emptyTable(table) {
@@ -123,8 +106,6 @@ function defineTableGenericFunctionalTestsNamespace() {
             correctVersion,
             newItem;
 
-        table.systemProperties = WindowsAzure.MobileServiceTable.SystemProperties.All;
-    
         emptyTable(table).then(function () {
             return table.insert({ id: 'an id', name: 'a value' });
         }).then(function (item) {
@@ -322,133 +303,6 @@ function defineTableGenericFunctionalTestsNamespace() {
             return refreshData(validStringIds);
         }).then(function () {
             done(true);
-        }, failFn);
-    }));
-
-    // BUG #1706815 (query system properties)
-    tests.push(new zumo.Test('AsyncFilterSelectOrderingOperationsNotImpactedBySystemProperties', function (test, done) {
-        test.addLog('test table sorting with various system properties');
-
-        globaldone = done;
-        globalTest = test;
-
-        var client = zumo.getClient(),
-            table = client.getTable(stringIdTableName),
-            savedItems = [],
-            success = true;
-
-        table.systemProperties = WindowsAzure.MobileServiceTable.SystemProperties.All;
-
-        emptyTable(table).then(function () {
-            return table.insert({ id: '1', name: 'value' })
-        }).then(function (item) {
-            savedItems.push(item);
-            return table.insert({ id: '2', name: 'value' });
-        }, failFn).then(function (item) {
-            savedItems.push(item);
-            return table.insert({ id: '3', name: 'value' });
-        }).then(function (item) {
-            savedItems.push(item);
-            return table.insert({ id: '4', name: 'value' });
-        }).then(function (item) {
-            savedItems.push(item);
-            return table.insert({ id: '5', name: 'value' });
-        }).then(function (item) {
-            var promise;
-
-            savedItems.push(item);
-            var testSystemProperties = getTestSystemProperties();
-            for (index = 0; index < testSystemProperties.length; index++) {
-                table.systemProperties = testSystemProperties[index];
-                test.addLog('testing properties: ' + table.systemProperties);
-
-                var orderTests = table.orderBy('createdAt').read().then(function (items) {
-                    for (var i = 0; i < items.length - 1; i++) {
-                        if (!(items[i].id < items[i + 1].id)) {
-                            test.addLog('createdAt order wrong');
-                            success = false;
-                            break;
-                        }
-                    }
-
-                    return table.orderBy('updatedAt').read();
-                }).then(function (items) {
-                    for (var i = 0; i < items.length - 1; i++) {
-                        if (!(items[i].id < items[i + 1].id)) {
-                            test.addLog('updatedAt order wrong');
-                            success = false;
-                            break;
-                        }
-                    }
-
-                    return table.orderBy('version').read();
-                }).then(function (items) {
-                    for (var i = 0; i < items.length - 1; i++) {
-                        if (!(items[i].id < items[i + 1].id)) {
-                            test.addLog('version order wrong');
-                            success = false;
-                            break;
-                        }
-                    }
-
-                    return table.select('id', 'createdAt').read();
-                     
-                    // Node only
-                    /*
-                    return table.where(function (value) { return this.createdAt >= value; }, savedItems[3].createdAt).read()
-                            .then(function (items) {
-                                if (!assert.areEqual(test, 2, items.length)) {
-                                    success = false;
-                                }
-
-                                return table.where(function (value) { return this.updatedAt >= value; }, savedItems[3].updatedAt).read();
-                            }).then(function (items) {
-                                if (!assert.areEqual(test, 2, items.length)) {
-                                    success = false;
-                                }
-                                return table.where({ version: savedItems[3].version }).read();
-                            }).then(function (items) {
-                                if (!assert.areEqual(test, 1, items.length)) {
-                                    success = false;
-                                }
-
-                                return table.select('id', 'createdAt').read();
-                            });
-                    */
-                }).then(function (items) {
-                    for (var i = 0; i < items.length; i++) {
-                        if (items[i].createdAt == null) {
-                            test.addLog('missing createdAt');
-                            success = false;
-                            break;
-                        }
-                    }
-                    return table.select('id', 'updatedAt').read();
-                }).then(function (items) {
-                    for (var i = 0; i < items.length; i++) {
-                        if (items[i].updatedAt == null) {
-                            test.addLog('missing updatedAt');
-                        }
-                    }
-                    return table.select('id', 'version').read();
-                }).then(function (items) {
-                    for (var i = 0; i < items.length; i++) {
-                        if (items[i].version == null) {
-                            test.addLog('missing version');
-                        }
-                    }
-                });
-
-                if (promise) {
-                    promise = promise.then(function () { return orderTests });
-                } else {
-                    promise = orderTests;
-                }
-            }
-
-            return promise;
-        }).then(function () {
-            done(success);
         }, failFn);
     }));
 
@@ -1051,8 +905,6 @@ function defineTableGenericFunctionalTestsNamespace() {
         var table = client.getTable(stringIdTableName),
                 savedVersion,
                 correctVersion;
-
-        table.systemProperties = WindowsAzure.MobileServiceTable.SystemProperties.All;
 
         var insertPromise = newLink();
         emptyTable(table).then(function () {

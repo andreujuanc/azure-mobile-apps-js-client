@@ -41,7 +41,7 @@ module.exports = function(grunt) {
         uglify: {
             options: {
                 banner: '//! Copyright (c) Microsoft Corporation. All rights reserved. <%= pkg.name %> v<%= pkg.version %>\n',
-                mangle: true
+                mangle: false
             },
             web: {
                 src: 'sdk/src/generated/azure-mobile-apps-client.js',
@@ -162,7 +162,8 @@ module.exports = function(grunt) {
                     'e2etest/app/browser-bundle-as-commonjs/generated',
                     'e2etest/app/browser-bundle-as-amd/generated',
                     'e2etest/app/browser-package-browserify/generated',
-                    'e2etest/app/browser-package-webpack/generated'
+                    'e2etest/app/browser-package-webpack/generated',
+                    'e2etest/app/cordova/www/generated'
                 ]
             }
         }

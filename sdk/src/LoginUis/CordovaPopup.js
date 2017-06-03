@@ -54,7 +54,7 @@ exports.login = function (startUri, endUri, callback) {
                         loginWindow.close();
                     }, 500);
                     var result = parseOAuthResultFromDoneUrl(evt.url);
-                    callback(new Error(result.error), result.oAuthToken);
+                    callback(result.error, result.oAuthToken);
                 }
             };
 
@@ -104,7 +104,7 @@ function parseOAuthResultFromDoneUrl(url) {
         errorMessage = extractMessageFromUrl(url, "#error=");
     return {
         oAuthToken: successMessage ? JSON.parse(successMessage) : null,
-        error: errorMessage
+        error: errorMessage ? new Error(errorMessage) : null
     };
 }
 

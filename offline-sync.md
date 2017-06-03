@@ -1,4 +1,4 @@
-# Offline data sync (Preview) using Azure Mobile Apps Cordova plugin
+# Offline data sync using Azure Mobile Apps Cordova plugin
 
 Offline data sync is a feature of Azure Mobile Apps that makes it easy for developers to create apps that are functional without a network connection. The offline data sync feature is available out of the box in the [Cordova SDK](https://github.com/Azure/azure-mobile-apps-cordova-client).
 

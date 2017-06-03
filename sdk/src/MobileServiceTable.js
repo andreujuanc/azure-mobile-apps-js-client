@@ -238,8 +238,8 @@ MobileServiceTable.prototype._read = function (query, parameters, callback) {
  * @public
  * @memberof MobileServiceTable
  * 
- * @param {QueryJs} query A {@link QueryJs} object representing the query to use while
- *                        reading the backend table
+ * @param {(QueryJs | string)} query Either, a {@link QueryJs} object representing the query to use while
+ *                        reading the backend table, OR, a URL encoded OData string for querying. 
  * @param {object} parameters An object of user-defined parameters and values to include in the request URI query string.
  * 
  * @returns {Promise} A promise that is resolved with an array of records read from the table, if the read is successful.
