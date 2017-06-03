@@ -26,6 +26,10 @@ var copyOperator = function (table, operator) {
         query.read = function (parameters) {
             return table.read(query, parameters);
         };
+        
+        query.count = function (parameters) {
+            return table.count(query, parameters);
+        };
 
         // Invoke the query operator on the newly created query
         return query[operator].apply(query, arguments);
