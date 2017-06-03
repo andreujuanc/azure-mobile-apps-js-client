@@ -100,6 +100,23 @@ function MobileServiceSyncTable(tableName, client) {
         return client.getSyncContext().read(query);
     };
 
+
+    /**
+     * Counts records from the local table.
+     * 
+     * @param {QueryJs} query A {@link QueryJs} object representing the query to use while
+     *                        counting the local table
+     * @returns {Promise} A promise that is resolved with count of records read from the table, if the query is successful.
+     *                    If query fails, the promise is rejected with the error.
+     */
+    this.count = function (query) {
+        if (_.isNull(query)) {
+            query = new Query(tableName);
+        }
+        
+        return client.getSyncContext().count(query);
+    };
+
     /**
      * Deletes an object / record from the local table.
      * 

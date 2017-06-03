@@ -210,6 +210,30 @@ function MobileServiceSyncContext(client) {
     };
 
 
+     /**
+     * Counts records from the local table.
+     * 
+     * @param {QueryJs} query A {@link QueryJs} object representing the query to use while
+     *                        counting the local table
+     * @returns {Promise} A promise that is resolved with count of records read from the table, if the query is successful.
+     *                    If query fails, the promise is rejected with the error.
+     */
+    this.count = function (query) {
+        
+        return Platform.async(function(callback) {
+            callback();
+        })().then(function() {
+            validateInitialization();
+
+            Validate.notNull(query, 'query');
+            Validate.isObject(query, 'query');
+
+            return store.count(query);
+        });
+    };
+
+    
+
     /**
      * Deletes an object / record from the specified local table.
      * 

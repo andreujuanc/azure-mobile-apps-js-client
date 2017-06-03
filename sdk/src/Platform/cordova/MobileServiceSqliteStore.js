@@ -491,6 +491,58 @@ var MobileServiceSqliteStore = function (dbName) {
     /**
      * @inheritdoc
      */
+    this.count = function (query) {
+        return runner.run(function() {
+            Validate.notNull(query, 'query');
+            Validate.isObject(query, 'query');
+
+            return this._count(query);
+        }.bind(this));
+    };
+
+    this._count = function (query) {        
+        return Platform.async(function(callback) {
+
+            var tableDefinition = storeHelper.getTableDefinition(tableDefinitions, query.getComponents().table);
+            if (_.isNull(tableDefinition)) {
+                throw new Error('Definition not found for table "' + query.getComponents().table + '"');
+            }
+
+            var count,
+                result = [],
+                statements = getSqlStatementsFromQuery(query);
+
+            this._db.transaction(function (transaction) {
+
+                // If the query requests the result count we expect 2 SQLite statements. Else, we expect a single statement.
+                if (statements.length < 1 || statements.length > 2) {
+                    throw new Error('Unexpected number of statements');
+                }
+
+                // The first statement gets the query results. Execute it.
+                // TODO: Figure out a better way to determine what the statements in the array correspond to.    
+                var countStatement = statements[0].sql;
+                countStatement = countStatement.replace(' * ', ' COUNT(1) [ROW_COUNT] ');
+                transaction.executeSql(countStatement, getStatementParameters(statements[0]), function (transaction, res) {
+                    var record;
+                    for (var j = 0; j < res.rows.length; j++) {
+                        // Deserialize the record read from the SQLite store into its original form.
+                        record = sqliteSerializer.deserialize(res.rows.item(j), tableDefinition.columnDefinitions);
+                        result.push(record);
+                    }
+                });
+            },
+            callback,
+            function () {
+                callback(null, result);
+            });
+        }.bind(this))();
+    };
+
+
+    /**
+     * @inheritdoc
+     */
     this.executeBatch = function (operations) {
         var self = this;
         return runner.run(function() {
