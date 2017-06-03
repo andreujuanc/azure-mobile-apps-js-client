@@ -46,7 +46,9 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
                 columnDefinitions: {
                     id: 'string', // column for storing queryId
                     tableName: 'string', // column for storing table name 
-                    value: 'date' // column for storing lastKnownUpdatedAt
+                    value: 'date', // column for storing lastKnownUpdatedAt
+                    createdAt: 'date',
+                    updatedAt: 'date' // column for storing last time this row was updated, for testing purposes
                 }
             });
         });
@@ -141,53 +143,95 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
         var tableName = pagePullQuery.getComponents().table;
         queryString = queryString.replace(new RegExp('^/' + tableName), '').replace("datetime'", "datetimeoffset'");
 
-        return mobileServiceTable.read(queryString, params).then(function(result) {
-            pulledRecords = result || [];
-
-            var chain = Platform.async(function(callback) {
-                callback();
-            })();
-            
-            // Process all records in the page
-            for (var i = 0; i < pulledRecords.length; i++) {
-                chain = processPulledRecord(chain, tableName, pulledRecords[i]); 
-            }
-
-            return chain;
-        }).then(function(pulled) {
+        return mobileServiceTable.read(queryString, params).then(function (result) {
+            pulledRecords = result;
+            // Process all records in the page  
+            return processPulledRecords(tableName, pulledRecords);
+        }).then(function (pulled) {
             return onPagePulled();
-        }).then(function() {
+        }).then(function () {
             return pulledRecords;
         });
     }
 
     // Processes the pulled record by taking an appropriate action, which can be one of:
     // inserting, updating, deleting in the local store or no action at all.
-    function processPulledRecord(chain, tableName, pulledRecord) {
-        return chain.then(function() {
+    function processPulledRecords(tableName, pulledRecords) {
 
-            // Update the store as per the pulled record 
-            return storeTaskRunner.run(function() {
-                if (Validate.isValidId(pulledRecord[idPropertyName])) {
-                    throw new Error('Pulled record does not have a valid ID');
-                }
-                
-                return operationTableManager.readPendingOperations(tableName, pulledRecord[idPropertyName]).then(function(pendingOperations) {
-                    // If there are pending operations for the record we just pulled, we ignore it.
-                    if (pendingOperations.length > 0) {
-                        return;
-                    }
+        // Update the store as per the pulled record 
+        return storeTaskRunner.run(function () {
 
-                    if (pulledRecord[sysProps.deletedColumnName] === true) {
-                        return store.del(tableName, pulledRecord.id);
-                    } else if (pulledRecord[sysProps.deletedColumnName] === false) {
-                        return store.upsert(tableName, pulledRecord);
-                    } else {
-                        throw new Error("'" + sysProps.deletedColumnName + "' system property is missing. Pull cannot work without it.'");
-                    }
+            if (!Array.isArray(pulledRecords))
+                pulledRecords = [pulledRecords];
+
+            var recordsToUpdate = [];
+            var idsToDelete = [];
+            var recordsChain = Platform.async(function (callback) {
+                callback();
+            })();
+
+           // for (var i = 0; i < pulledRecords.length; i++) {
+                //var record = pulledRecords[i];
+                recordsChain = processAllRecords(recordsChain, tableName, pulledRecords, idsToDelete, recordsToUpdate);
+            //}
+
+            return recordsChain.then(function () {
+                //TODO: REMOVE LOG
+                var toDel = store.del(tableName, idsToDelete);
+                return toDel.then(function () {
+                    //console.log('deletes done, executing upsert', tableName);
+                    return store.upsert(tableName, recordsToUpdate)
+                      .then(function(result){
+                          return result;
+                      });
                 });
             });
-        });
+
+        }); //store task runner
+    }
+
+    function processSingleRecord(chain, tableName, record, idsToDelete, recordsToUpdate) {
+        return chain.then(function () {
+            return operationTableManager
+                .readPendingOperations(tableName, record[idPropertyName])
+                
+                .then(function (pendingOperations) {
+                    if (!_.isValidId(record[idPropertyName]))
+                        throw new Error('Pulled record does not have a valid ID');
+                    if (pendingOperations.length === 0) {
+                        if (record[sysProps.deletedColumnName] === true) {
+                            idsToDelete.push(record.id);
+                        } else if (record[sysProps.deletedColumnName] === false) {
+                            recordsToUpdate.push(record);
+                        } else {
+                            throw new Error("'" + sysProps.deletedColumnName + "' system property is missing. Pull cannot work without it.'");
+                        }
+                    }                    
+                }); // pending operations
+        });// chain
+    }
+
+    function processAllRecords(chain, tableName, records, idsToDelete, recordsToUpdate) {
+        return chain.then(function () {
+            return operationTableManager
+                .readPagePendingOperations(tableName, records)                
+                .then(function (pendingOperations) {
+                    //if (!_.isValidId(record[idPropertyName]))
+                    //    throw new Error('Pulled record does not have a valid ID');
+                    for(var i = 0; i < records.length; i++){
+                         if (pendingOperations.length === 0) {
+                            if (records[i][sysProps.deletedColumnName] === true) {
+                                idsToDelete.push(records[i].id);
+                            } else if (records[i][sysProps.deletedColumnName] === false) {
+                                recordsToUpdate.push(records[i]);
+                            } else {
+                                throw new Error("'" + sysProps.deletedColumnName + "' system property is missing. Pull cannot work without it.'");
+                            }
+                        }
+                    }
+                                       
+                }); // pending operations
+        });// chain
     }
 
     // Gets the last known updatedAt timestamp.

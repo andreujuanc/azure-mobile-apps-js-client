@@ -279,6 +279,16 @@ MobileServiceClient.prototype._request = function (method, uriFragment, content,
     if (this.currentUser && !_.isNullOrEmpty(this.currentUser.mobileServiceAuthenticationToken)) {
         options.headers["X-ZUMO-AUTH"] = this.currentUser.mobileServiceAuthenticationToken;
     }
+
+    debugger;
+    if (this.currentUser && this.currentUser.customHeaders && this.currentUser.customHeaders.length > 0) {
+        for (var i = 0; i< this.currentUser.customHeaders.length; i++){
+            var header = this.currentUser.customHeaders[i];
+            if(header && !_.isNull(header.name))
+                options.headers[header] = header.value;
+        }
+    }
+
     if (!_.isNull(MobileServiceClient._userAgent)) {
         options.headers["User-Agent"] = MobileServiceClient._userAgent;
     }

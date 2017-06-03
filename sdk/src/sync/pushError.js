@@ -151,7 +151,12 @@ function createPushError(store, operationTableManager, storeTaskRunner, pushOper
      * @returns {boolean} true if the error is a conflict. False, otherwise.
      */
     function isConflict() {
-        return statusCode === 409 || statusCode === 412;
+        //JCA:
+        debugger;
+         return operationError.request.status === 409 || operationError.request.status === 412;
+
+        //ORIGINAL
+        //return statusCode === 409 || statusCode === 412;
     }
     
     /**
@@ -429,7 +434,12 @@ function createPushError(store, operationTableManager, storeTaskRunner, pushOper
 }
 
 function makeCopy(value) {
-    if (!_.isNull(value)) {
+    //JCA:
+    debugger;
+    if (!_.isNull(value) && typeof value !== 'string') {
+    
+    //ORIGINAL: 
+    //if (!_.isNull(value)) {
         value = JSON.parse( JSON.stringify(value) );
     }
     return value;

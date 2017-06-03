@@ -36,6 +36,7 @@ function createOperationTableManager(store) {
         lockOperation: lockOperation,
         unlockOperation: unlockOperation,
         readPendingOperations: readPendingOperations,
+        readPagePendingOperations: readPagePendingOperations,
         readFirstPendingOperationWithData: readFirstPendingOperationWithData,
         removeLockedOperation: removeLockedOperation,
         getLoggingOperation: getLoggingOperation,
@@ -181,6 +182,58 @@ function createOperationTableManager(store) {
             }, tableName, itemId).orderBy('id'));
         });
     }
+
+
+    function readPagePendingOperations(tableName, records) {
+
+       return Platform.async(function(callback) {
+            var idsExpressions = [];
+            var itemIds = [];
+
+            for (var i = 0; i < records.length; i++ ){
+              //if (!_.isNull(records[i])) {
+                idsExpressions.push('?');
+                itemIds.push(records[i][idPropertyName]);
+              //}
+            }
+
+            var selectStatement = _.format("SELECT * FROM [{0}] WHERE tableName = '{1}' AND [{2}] in ('{3}')", operationTableName, tableName , idPropertyName, itemIds.join("','"));
+
+            // var tableDefinition = storeHelper.getTableDefinition(tableDefinitions, query.getComponents().table);
+            // if (_.isNull(tableDefinition)) {
+            //     throw new Error('Definition not found for table "' + query.getComponents().table + '"');
+            // }
+
+            var count,
+                result = [];       
+
+                store._db.transaction(function (transaction) {
+                transaction.executeSql(selectStatement, null, function (transaction, res) {
+                    var record;
+                    for (var j = 0; j < res.rows.length; j++) {
+                        // Deserialize the record read from the SQLite store into its original form.
+                        //record = sqliteSerializer.deserialize(res.rows.item(j), tableDefinition.columnDefinitions);
+                        record = res.rows.item(j);
+                        result.push(record);
+                    }
+                }, function(error){
+                  debugger;
+                });
+            },
+            callback,
+            function () {
+                // If we fetched the record count, combine the records and the count into an object.
+                if (count !== undefined) {
+                    result = {
+                        result: result,
+                        count: count
+                    };
+                }
+                callback(null, result);
+            });
+        }.bind(this))();
+    }
+    
     
     /**
      * Gets the first / oldest pending operation, i.e. the one with smallest id value

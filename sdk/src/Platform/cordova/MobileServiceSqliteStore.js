@@ -369,46 +369,41 @@ var MobileServiceSqliteStore = function (dbName) {
     
     // Deletes the records selected by the specified query and notifies the callback.
     this._deleteUsingQuery = function (query, callback) {
-
         var self = this;
     
         // The query can have a 'select' clause that queries only specific columns. However, we need to know the ID value
-        // to be able to delete records. So we explicitly remove selection from the query, if any.
+        // to be able to delete records. So we explicitly set selection to just the ID column.
         var components = query.getComponents();
-        if (components.selections && components.selections.length > 0) {
-            components.selections = [];
-            query.setComponents(components);
+        components.selections = [idPropertyName];
+        query.setComponents(components);
+
+        var tableName = components.table;
+        Validate.isString(tableName);
+        Validate.notNullOrEmpty(tableName);
+
+        var tableDefinition = storeHelper.getTableDefinition(tableDefinitions, tableName);
+        if (_.isNull(tableDefinition)) {
+            throw new Error('Definition not found for table "' + tableName + '"');
         }
 
-        // Run the query and get the list of records to be deleted
-        self._read(query).then(function (result) {
-            try {
-                if (!_.isArray(result)) { // This can happen if the query used to read contains includeCount()
-                    result = result.result;
-                    Validate.isArray(result);
-                }
+        var statements = getSqlStatementsFromQuery(query);
 
-                var tableName = query.getComponents().table;
-                Validate.isString(tableName);
-                Validate.notNullOrEmpty(tableName);
+        // If the query requests the result count we expect 2 SQLite statements. Else, we expect a single statement.
+        if (statements.length < 1 || statements.length > 2) {
+            throw new Error('Unexpected number of statements');
+        }
 
-                // Get list of IDs from the records returned by read.
-                var ids = [];
-                result.forEach(function(record) {
-                    ids.push(record[idPropertyName]);
-                });
+        self._db.transaction(function (transaction) {
 
-                // Delete the records returned by read.
-                self._db.transaction(function(transaction) {
-                    self._deleteIds(transaction, tableName, ids);
-                },
-                callback,
-                callback);
-
-            } catch (error) {
-                callback(error);
-            }
+            // The first statement gets the query results. Execute it.
+            // Second statement, if any, is for geting the result count. Ignore it.
+            // TODO: Figure out a better way to determine what the statements in the array correspond to.
+            var deleteStatement = _.format("DELETE FROM [{0}] WHERE [{1}] in ({2})", tableName, idPropertyName, statements[0].sql);
+            // Example deleteStatement: DELETE FROM [mytable] where [id] IN (SELECT [id] FROM [mytable] WHERE [language] = 'javascript')
+            
+            transaction.executeSql(deleteStatement, getStatementParameters(statements[0]));
         },
+        callback,
         callback);
     };
 
