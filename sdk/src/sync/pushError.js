@@ -152,7 +152,6 @@ function createPushError(store, operationTableManager, storeTaskRunner, pushOper
      */
     function isConflict() {
         //JCA:
-        debugger;
          return operationError.request.status === 409 || operationError.request.status === 412;
 
         //ORIGINAL
@@ -435,7 +434,6 @@ function createPushError(store, operationTableManager, storeTaskRunner, pushOper
 
 function makeCopy(value) {
     //JCA:
-    debugger;
     if (!_.isNull(value) && typeof value !== 'string') {
     
     //ORIGINAL: 

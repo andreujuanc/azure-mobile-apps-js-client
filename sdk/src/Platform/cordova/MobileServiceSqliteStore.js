@@ -7,7 +7,7 @@
  * This uses the https://www.npmjs.com/package/cordova-sqlite-storage Cordova plugin.
  * @private
  */
- 
+
 var Platform = require('.'),
     Validate = require('../../Utilities/Validate'),
     _ = require('../../Utilities/Extensions'),
@@ -34,11 +34,11 @@ var MobileServiceSqliteStore = function (dbName) {
 
     // Guard against initialization without the new operator
     "use strict";
-    if ( !(this instanceof MobileServiceSqliteStore) ) {
+    if (!(this instanceof MobileServiceSqliteStore)) {
         return new MobileServiceSqliteStore(dbName);
     }
 
-    if ( _.isNull(dbName) ) {
+    if (_.isNull(dbName)) {
         dbName = defaultDbName;
     }
 
@@ -55,15 +55,15 @@ var MobileServiceSqliteStore = function (dbName) {
      * 
      * @returns A promise that is resolved when the initialization is complete OR rejected if it fails.
      */
-    this.init = function() {
-        return runner.run(function() {
+    this.init = function () {
+        return runner.run(function () {
             return this._init();
         }.bind(this));
     };
 
-    this._init = function() {
+    this._init = function () {
         var self = this;
-        return Platform.async(function(callback) {
+        return Platform.async(function (callback) {
             if (self._db) {
                 return callback(); // already initialized.
             }
@@ -88,19 +88,19 @@ var MobileServiceSqliteStore = function (dbName) {
      * 
      * @returns A promise that is resolved when the sqlite store is closed successfully OR rejected if it fails.
      */
-    this.close = function() {
+    this.close = function () {
         var self = this;
-        return runner.run(function() {
+        return runner.run(function () {
             if (!self._db) {
                 return; // nothing to close
             }
 
-            return Platform.async(function(callback) {
+            return Platform.async(function (callback) {
                 self._db.close(function successcb() {
                     self._db = undefined;
                     callback();
                 },
-                callback);
+                    callback);
             })();
         });
     };
@@ -110,16 +110,16 @@ var MobileServiceSqliteStore = function (dbName) {
      */
     this.defineTable = function (tableDefinition) {
         var self = this;
-        return runner.run(function() {
+        return runner.run(function () {
             storeHelper.validateTableDefinition(tableDefinition);
 
             tableDefinition = JSON.parse(JSON.stringify(tableDefinition)); // clone the table definition as we will need it later
 
             // Initialize the store before defining the table
             // If the store is already initialized, calling init() will have no effect. 
-            return self._init().then(function() {
-                return Platform.async(function(callback) {
-                    self._db.transaction(function(transaction) {
+            return self._init().then(function () {
+                return Platform.async(function (callback) {
+                    self._db.transaction(function (transaction) {
 
                         // Get the table information
                         var pragmaStatement = _.format("PRAGMA table_info({0});", tableDefinition.name);
@@ -136,24 +136,24 @@ var MobileServiceSqliteStore = function (dbName) {
                                 }
 
                                 addMissingColumns(transaction, tableDefinition, existingColumns);
-                                
+
                             } else { // table does not exist, create it.
                                 createTable(transaction, tableDefinition);
                             }
                         });
 
                     },
-                    callback,
-                    function(result) {
-                        // Table definition is successful, update the in-memory list of table definitions.
-                        var error; 
-                        try {
-                            storeHelper.addTableDefinition(tableDefinitions, tableDefinition);
-                        } catch (err) {
-                            error = err;
-                        }
-                        callback(error);
-                    });
+                        callback,
+                        function (result) {
+                            // Table definition is successful, update the in-memory list of table definitions.
+                            var error;
+                            try {
+                                storeHelper.addTableDefinition(tableDefinitions, tableDefinition);
+                            } catch (err) {
+                                error = err;
+                            }
+                            callback(error);
+                        });
                 })();
             });
         });
@@ -164,17 +164,17 @@ var MobileServiceSqliteStore = function (dbName) {
      */
     this.upsert = function (tableName, data) {
         var self = this;
-        return runner.run(function() {
-            return Platform.async(function(callback) {
-                self._db.transaction(function(transaction) {
+        return runner.run(function () {
+            return Platform.async(function (callback) {
+                self._db.transaction(function (transaction) {
                     self._upsert(transaction, tableName, data);
                 },
-                callback,
-                callback);
+                    callback,
+                    callback);
             })();
         });
     };
-    
+
     // Performs the upsert operation.
     // This method validates all arguments, callers can skip validation. 
     this._upsert = function (transaction, tableName, data) {
@@ -236,7 +236,7 @@ var MobileServiceSqliteStore = function (dbName) {
             if (_.isNull(records[i])) {
                 continue;
             }
-            
+
             record = records[i];
 
             // Reset the variables dirtied in the previous iteration of the loop.
@@ -251,14 +251,14 @@ var MobileServiceSqliteStore = function (dbName) {
                 insertColumnNames.push(property);
                 insertParams.push('?');
                 insertValues.push(record[property]);
-                
+
                 if (!storeHelper.isId(property)) {
                     updateColumnNames.push(property);
                     updateExpressions.push(property + ' = ?');
                     updateValues.push(record[property]);
                 }
             }
-            
+
             // Insert the instance. If one with the same id already exists, ignore it.
             statements.push(_.format("INSERT OR IGNORE INTO {0} ({1}) VALUES ({2})", tableName, insertColumnNames.join(), insertParams.join()));
             parameters.push(insertValues);
@@ -285,12 +285,12 @@ var MobileServiceSqliteStore = function (dbName) {
      */
     this.lookup = function (tableName, id, suppressRecordNotFoundError) {
         var self = this;
-        return runner.run(function() {
+        return runner.run(function () {
             // Validate the arguments
             Validate.isString(tableName, 'tableName');
             Validate.notNullOrEmpty(tableName, 'tableName');
             Validate.isValidId(id, 'id');
-            
+
             var tableDefinition = storeHelper.getTableDefinition(tableDefinitions, tableName);
             if (_.isNull(tableDefinition)) {
                 throw new Error('Definition not found for table "' + tableName + '"');
@@ -298,7 +298,7 @@ var MobileServiceSqliteStore = function (dbName) {
 
             var lookupStatement = _.format("SELECT * FROM [{0}] WHERE {1} = ? COLLATE NOCASE", tableName, idPropertyName);
 
-            return Platform.async(function(callback) {
+            return Platform.async(function (callback) {
                 self._db.executeSql(lookupStatement, [id], function (result) {
                     var error,
                         record;
@@ -323,7 +323,7 @@ var MobileServiceSqliteStore = function (dbName) {
                         callback(null, record);
                     }
                 },
-                callback);
+                    callback);
             })();
         });
     };
@@ -333,12 +333,13 @@ var MobileServiceSqliteStore = function (dbName) {
      */
     this.del = function (tableNameOrQuery, ids) {
         var self = this;
-        return runner.run(function() {
-            return Platform.async(function(callback) {
+        return runner.run(function () {
+            return Platform.async(function (callback) {
                 // Validate parameters
                 Validate.notNull(tableNameOrQuery);
 
                 if (_.isString(tableNameOrQuery)) { // tableNameOrQuery is table name, delete records with specified IDs.
+                    if(!ids || (ids && ids.length === 0)) return callback();
                     Validate.notNullOrEmpty(tableNameOrQuery, 'tableNameOrQuery');
 
                     // If a single id is specified, convert it to an array and proceed.
@@ -346,17 +347,23 @@ var MobileServiceSqliteStore = function (dbName) {
                     if (!_.isArray(ids)) {
                         ids = [ids];
                     }
-                    
-                    self._db.transaction(function(transaction) {
+
+                    self._db.transaction(function (transaction) {
                         for (var i = 0; i < ids.length; i++) {
-                            if (! _.isNull(ids[i])) {
+                            if (!_.isNull(ids[i])) {
                                 Validate.isValidId(ids[i]);
                             }
                         }
-                        self._deleteIds(transaction, tableNameOrQuery /* table name */, ids);
+                        //Need to make batches for deletes, since sqlite runs out of query length/parameters
+                        var batchSize = 50;
+                        var times = Math.floor(ids.length / batchSize) + 1;
+                        for (var t = 0; t < times; t++) {
+                            self._deleteIds(transaction, tableNameOrQuery /* table name */, ids.slice(t * batchSize, (t * batchSize) + batchSize));
+                        }
+
                     },
-                    callback,
-                    callback);
+                        callback,
+                        callback);
 
                 } else if (_.isObject(tableNameOrQuery)) { // tableNameOrQuery is a query, delete all records specified by the query.
                     self._deleteUsingQuery(tableNameOrQuery /* query */, callback);
@@ -366,11 +373,11 @@ var MobileServiceSqliteStore = function (dbName) {
             })();
         });
     };
-    
+
     // Deletes the records selected by the specified query and notifies the callback.
     this._deleteUsingQuery = function (query, callback) {
         var self = this;
-    
+
         // The query can have a 'select' clause that queries only specific columns. However, we need to know the ID value
         // to be able to delete records. So we explicitly set selection to just the ID column.
         var components = query.getComponents();
@@ -400,11 +407,11 @@ var MobileServiceSqliteStore = function (dbName) {
             // TODO: Figure out a better way to determine what the statements in the array correspond to.
             var deleteStatement = _.format("DELETE FROM [{0}] WHERE [{1}] in ({2})", tableName, idPropertyName, statements[0].sql);
             // Example deleteStatement: DELETE FROM [mytable] where [id] IN (SELECT [id] FROM [mytable] WHERE [language] = 'javascript')
-            
+
             transaction.executeSql(deleteStatement, getStatementParameters(statements[0]));
         },
-        callback,
-        callback);
+            callback,
+            callback);
     };
 
     // Delete records from the table that match the specified IDs.
@@ -417,7 +424,7 @@ var MobileServiceSqliteStore = function (dbName) {
                 deleteParams.push(ids[i]);
             }
         }
-        
+
         var deleteStatement = _.format("DELETE FROM {0} WHERE {1} in ({2})", tableName, idPropertyName, deleteExpressions.join());
         if (this._editStatement) { // test hook
             deleteStatement = this._editStatement(deleteStatement);
@@ -429,7 +436,7 @@ var MobileServiceSqliteStore = function (dbName) {
      * @inheritdoc
      */
     this.read = function (query) {
-        return runner.run(function() {
+        return runner.run(function () {
             Validate.notNull(query, 'query');
             Validate.isObject(query, 'query');
 
@@ -438,7 +445,7 @@ var MobileServiceSqliteStore = function (dbName) {
     };
 
     this._read = function (query) {
-        return Platform.async(function(callback) {
+        return Platform.async(function (callback) {
 
             var tableDefinition = storeHelper.getTableDefinition(tableDefinitions, query.getComponents().table);
             if (_.isNull(tableDefinition)) {
@@ -474,25 +481,25 @@ var MobileServiceSqliteStore = function (dbName) {
                     });
                 }
             },
-            callback,
-            function () {
-                // If we fetched the record count, combine the records and the count into an object.
-                if (count !== undefined) {
-                    result = {
-                        result: result,
-                        count: count
-                    };
-                }
-                callback(null, result);
-            });
+                callback,
+                function () {
+                    // If we fetched the record count, combine the records and the count into an object.
+                    if (count !== undefined) {
+                        result = {
+                            result: result,
+                            count: count
+                        };
+                    }
+                    callback(null, result);
+                });
         }.bind(this))();
     };
-    
+
     /**
      * @inheritdoc
      */
     this.count = function (query) {
-        return runner.run(function() {
+        return runner.run(function () {
             Validate.notNull(query, 'query');
             Validate.isObject(query, 'query');
 
@@ -500,8 +507,8 @@ var MobileServiceSqliteStore = function (dbName) {
         }.bind(this));
     };
 
-    this._count = function (query) {        
-        return Platform.async(function(callback) {
+    this._count = function (query) {
+        return Platform.async(function (callback) {
 
             var tableDefinition = storeHelper.getTableDefinition(tableDefinitions, query.getComponents().table);
             if (_.isNull(tableDefinition)) {
@@ -532,10 +539,10 @@ var MobileServiceSqliteStore = function (dbName) {
                     }
                 });
             },
-            callback,
-            function () {
-                callback(null, result);
-            });
+                callback,
+                function () {
+                    callback(null, result);
+                });
         }.bind(this))();
     };
 
@@ -545,28 +552,28 @@ var MobileServiceSqliteStore = function (dbName) {
      */
     this.executeBatch = function (operations) {
         var self = this;
-        return runner.run(function() {
+        return runner.run(function () {
             Validate.isArray(operations);
 
-            return Platform.async(function(callback) {
-                self._db.transaction(function(transaction) {
+            return Platform.async(function (callback) {
+                self._db.transaction(function (transaction) {
                     for (var i = 0; i < operations.length; i++) {
                         var operation = operations[i];
-                        
+
                         if (_.isNull(operation)) {
                             continue;
                         }
-                        
+
                         Validate.isString(operation.action);
                         Validate.notNullOrEmpty(operation.action);
 
                         Validate.isString(operation.tableName);
                         Validate.notNullOrEmpty(operation.tableName);
-                        
+
                         if (operation.action.toLowerCase() === 'upsert') {
                             self._upsert(transaction, operation.tableName, operation.data);
                         } else if (operation.action.toLowerCase() === 'delete') {
-                            if ( ! _.isNull(operation.id) ) {
+                            if (!_.isNull(operation.id)) {
                                 Validate.isValidId(operation.id);
                                 self._deleteIds(transaction, operation.tableName, [operation.id]);
                             }
@@ -575,8 +582,8 @@ var MobileServiceSqliteStore = function (dbName) {
                         }
                     }
                 },
-                callback,
-                callback);
+                    callback,
+                    callback);
             })();
         });
     };
@@ -584,13 +591,13 @@ var MobileServiceSqliteStore = function (dbName) {
 
 // Converts the QueryJS object into equivalent SQLite statements
 function getSqlStatementsFromQuery(query) {
-    
+
     // Convert QueryJS object to an OData query string
     var odataQuery = Query.Providers.OData.toOData(query);
-    
+
     // Convert the OData query string into equivalent SQLite statements
     var statements = formatSql(odataQuery, { flavor: 'sqlite' });
-    
+
     return statements;
 }
 
@@ -624,7 +631,7 @@ function createTable(transaction, tableDefinition) {
 
         columnDefinitionClauses.push(columnDefinitionClause);
     }
-    
+
     var createTableStatement = _.format("CREATE TABLE [{0}] ({1})", tableDefinition.name, columnDefinitionClauses.join());
 
     transaction.executeSql(createTableStatement);
