@@ -531,12 +531,12 @@ var MobileServiceSqliteStore = function (dbName) {
                 var countStatement = statements[0].sql;
                 countStatement = countStatement.replace(' * ', ' COUNT(1) [ROW_COUNT] ');
                 transaction.executeSql(countStatement, getStatementParameters(statements[0]), function (transaction, res) {
-                    var record;
-                    for (var j = 0; j < res.rows.length; j++) {
-                        // Deserialize the record read from the SQLite store into its original form.
-                        record = sqliteSerializer.deserialize(res.rows.item(j), tableDefinition.columnDefinitions);
-                        result.push(record);
+                    var rowCount = 0;
+                    if(res.rows && res.rows.length > 0){
+                      var row = res.rows.item(0);
+                      rowCount = row.RowCount || 0;
                     }
+                    result = rowCount;
                 });
             },
                 callback,
