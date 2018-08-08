@@ -92,7 +92,7 @@ function loginWithGoogle(appUrl, callback) {
         callback(new Error(errorResponse), null);
     };
 
-    cordova.exec(successCallback, errorCallback, "MobileServices", "loginWithGoogle", [appUrl])
+    cordova.exec(successCallback, errorCallback, "MobileServices", "loginWithGoogle", [appUrl]);
 }
 
 function isRunUnderRippleEmulator () {
